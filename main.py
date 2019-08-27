@@ -57,21 +57,25 @@ def text_generator(state_dict):
     context_tokens = enc.encode(args.text)
 
     generated = 0
-    for _ in range(args.nsamples // args.batch_size):
-        out = sample_sequence(
-            model=model, length=args.length,
-            context=context_tokens  if not  args.unconditional else None,
-            start_token=enc.encoder['<|endoftext|>'] if args.unconditional else None,
-            batch_size=args.batch_size,
-            temperature=args.temperature, top_k=args.top_k, device=device
-        )
-        out = out[:, len(context_tokens):].tolist()
-        for i in range(args.batch_size):
-            generated += 1
-            text = enc.decode(out[i])
-            if args.quiet is False:
-                print("=" * 40 + " SAMPLE " + str(generated) + " " + "=" * 40)
-            print(text)
+    with open("".join(args.text.split()) + '.txt','w') as file:
+        for _ in range(args.nsamples // args.batch_size):
+            out = sample_sequence(
+                model=model, length=args.length,
+                context=context_tokens  if not  args.unconditional else None,
+                start_token=enc.encoder['<|endoftext|>'] if args.unconditional else None,
+                batch_size=args.batch_size,
+                temperature=args.temperature, top_k=args.top_k, device=device
+            )
+            out = out[:, len(context_tokens):].tolist()
+            for i in range(args.batch_size):
+                generated += 1
+                text = enc.decode(out[i])
+                if args.quiet is False:
+                    print("=" * 40 + " SAMPLE " + str(generated) + " " + "=" * 40)
+                print(text)
+                file.write(text)
+                #so that we can split them back into paragraphs later
+                file.write('<eop>')
 
 if __name__ == '__main__':
     if os.path.exists('gpt2-pytorch_model.bin'):
